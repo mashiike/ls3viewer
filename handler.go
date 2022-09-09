@@ -118,6 +118,9 @@ func (h *handler) buildTemplateData(r *http.Request) (map[string]interface{}, er
 			data["ContentBody"] = contentBody
 		}
 	}
+	for i := range resp.Contents {
+		*resp.Contents[i].Key = strings.TrimPrefix(*resp.Contents[i].Key, h.objectKeyPrefix)
+	}
 	return data, nil
 }
 
