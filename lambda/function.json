@@ -4,7 +4,6 @@
       "Variables": {
           "LS3VIEWER_LOG_LEVEL": "{{ env `LS3VIEWER_LOG_LEVEL` `info`}}",
           "LS3VIEWER_BUCKET_NAME": "{{ must_env `LS3VIEWER_BUCKET_NAME` }}",
-          "LS3VIEWER_LAMBDA_FUNCTION_ALIAS": "current",
           "SSMWRAP_PATHS": "/ls3viewer/"
       }
   },
