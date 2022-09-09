@@ -8,7 +8,6 @@ import (
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -20,13 +19,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/smithy-go"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/thanhpk/randstr"
 	"golang.org/x/oauth2"
@@ -41,16 +36,11 @@ type S3Client interface {
 	HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error)
 }
 
-type LambdaClient interface {
-	GetFunctionUrlConfig(ctx context.Context, params *lambda.GetFunctionUrlConfigInput, optFns ...func(*lambda.Options)) (*lambda.GetFunctionUrlConfigOutput, error)
-}
-
 type LoggerFunc func(level string, v ...interface{})
 
 type Options struct {
 	HTMLTemplate string
 	S3Client     S3Client
-	LambdaClient LambdaClient
 	Logger       LoggerFunc
 	BaseURL      string
 	Middleware   []func(http.Handler) http.Handler
@@ -67,7 +57,7 @@ func newOptions() *Options {
 }
 
 func (opts *Options) buildOptions() error {
-	if opts.S3Client != nil && opts.LambdaClient != nil {
+	if opts.S3Client != nil {
 		return nil
 	}
 	awsCfg, err := config.LoadDefaultConfig(context.Background())
@@ -77,44 +67,22 @@ func (opts *Options) buildOptions() error {
 	if opts.S3Client == nil {
 		opts.S3Client = s3.NewFromConfig(awsCfg)
 	}
-	if opts.LambdaClient == nil {
-		opts.LambdaClient = lambda.NewFromConfig(awsCfg)
-	}
 	return nil
 }
 
-func (opts *Options) getBaseURL(ctx context.Context) (*url.URL, error) {
+func (opts *Options) getBaseURL(r *http.Request) (*url.URL, error) {
 	if opts.BaseURL != "" {
 		return url.Parse(opts.BaseURL)
 	}
 	if baseURL := os.Getenv("LS3VIEWER_BASE_URL"); baseURL != "" {
 		return url.Parse(baseURL)
 	}
-
-	if lambdacontext.FunctionName != "" {
-		var qualifier *string
-		if q := os.Getenv("LS3VIEWER_LAMBDA_FUNCTION_ALIAS"); q != "" {
-			qualifier = &q
-		}
-		output, err := opts.LambdaClient.GetFunctionUrlConfig(ctx, &lambda.GetFunctionUrlConfigInput{
-			FunctionName: aws.String(lambdacontext.FunctionName),
-			Qualifier:    qualifier,
-		})
-		if err != nil {
-			var oe *smithy.OperationError
-			if !errors.As(err, &oe) {
-				return nil, err
-			}
-			if oe.Operation() != "ResourceNotFoundException" {
-				return nil, err
-			}
-		} else {
-			return url.Parse(*output.FunctionUrl)
-		}
+	if r.URL.Scheme == "" {
+		r.URL.Scheme = "https"
 	}
 	u := &url.URL{
-		Scheme: "http",
-		Host:   "localhost:8080",
+		Scheme: r.URL.Scheme,
+		Host:   r.URL.Host,
 	}
 	return u, nil
 }
@@ -242,8 +210,7 @@ func (h *googleOIDCHandler) newOIDCConfig(ctx context.Context, baseURL *url.URL)
 
 func (h *googleOIDCHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.opts.Logger("debug", "enter oidc middleware")
-	ctx := r.Context()
-	baseURL, err := h.opts.getBaseURL(ctx)
+	baseURL, err := h.opts.getBaseURL(r)
 	if err != nil {
 		h.opts.Logger("error", err)
 		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
@@ -399,7 +366,7 @@ func WithAccessLogger() func(*Options) {
 	return func(o *Options) {
 		o.Middleware = append(o.Middleware, func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				o.Logger("info", r.Method, r.URL.Path)
+				o.Logger("info", r.Method, fmt.Sprintf("%s://%s%s", r.URL.Scheme, r.Host, r.URL.Path))
 				next.ServeHTTP(w, r)
 			})
 		})
