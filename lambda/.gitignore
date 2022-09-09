@@ -1,0 +1,4 @@
+bootstrap
+config.tf
+.terraform*
+ls3viewer_dummy.zip

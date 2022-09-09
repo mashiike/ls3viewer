@@ -1,0 +1,6 @@
+.gitignore
+.lambdaignore
+Makefile
+function.json
+*.tf
+.terraform*
