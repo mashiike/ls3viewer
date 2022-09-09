@@ -58,6 +58,7 @@ func main() {
 		bucketName      string
 		objectKeyPrefix string
 		address         string
+		baseURL         string
 		logLevel        string
 
 		basicUser          string
@@ -69,6 +70,7 @@ func main() {
 	flag.StringVar(&bucketName, "bucket-name", "", "s3 bucket name")
 	flag.StringVar(&objectKeyPrefix, "key-prefix", "", "object-key-prefix")
 	flag.StringVar(&address, "address", ":8080", "local server address")
+	flag.StringVar(&address, "base-url", "", "viewer base url")
 	flag.StringVar(&basicUser, "basic-user", "", "basic auth user")
 	flag.StringVar(&basicPass, "basic-pass", "", "basic auth pass")
 	flag.StringVar(&googleClientID, "google-client-id", "", "google oidc client id")
@@ -81,6 +83,9 @@ func main() {
 	filter.SetMinLevel(logutils.LogLevel(logLevel))
 
 	optFns := make([]func(*ls3viewer.Options), 0)
+	if baseURL != "" {
+		optFns = append(optFns, ls3viewer.WithBaseURL(baseURL))
+	}
 	if basicUser != "" && basicPass != "" {
 		log.Println("[info] enable basic auth")
 		optFns = append(optFns, ls3viewer.WithBasicAuth(basicUser, basicPass))

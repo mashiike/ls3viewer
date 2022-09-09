@@ -13,7 +13,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -73,9 +72,6 @@ func (opts *Options) buildOptions() error {
 func (opts *Options) getBaseURL(r *http.Request) (*url.URL, error) {
 	if opts.BaseURL != "" {
 		return url.Parse(opts.BaseURL)
-	}
-	if baseURL := os.Getenv("LS3VIEWER_BASE_URL"); baseURL != "" {
-		return url.Parse(baseURL)
 	}
 	if r.URL.Scheme == "" {
 		r.URL.Scheme = "https"
