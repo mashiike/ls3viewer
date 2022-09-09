@@ -8,7 +8,7 @@
   <body>
     <div class="container">
     <div class="page-header">
-      <h1>s3://{{ $bucket }}/{{ .Prefix }}</h1>
+      <h1>s3://{{ $bucket }}/{{ .ObjectKeyPrefix }}</h1>
     </div>
     <div class="list-group">
     {{if ne .Prefix "" }}

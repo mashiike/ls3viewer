@@ -102,9 +102,10 @@ func (h *handler) buildTemplateData(r *http.Request) (map[string]interface{}, er
 		return nil, err
 	}
 	data := map[string]interface{}{
-		"Prefix":  prefix,
-		"res":     resp,
-		"BaseURL": baseURL.String(),
+		"Prefix":          prefix,
+		"ObjectKeyPrefix": keyPrefix,
+		"res":             resp,
+		"BaseURL":         baseURL.String(),
 	}
 
 	if content, ok := h.matchSingleObject(resp.Contents, keyPrefix); ok {
