@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.1.3](https://github.com/mashiike/ls3viewer/compare/v0.1.2...v0.1.3) - 2022-09-09
+- fix getBaseURL by @mashiike in https://github.com/mashiike/ls3viewer/pull/9
+- fix object key prefix by @mashiike in https://github.com/mashiike/ls3viewer/pull/11
+
 ## [v0.1.2](https://github.com/mashiike/ls3viewer/compare/v0.1.1...v0.1.2) - 2022-09-09
 - Since ridge contains the Host of the request, there is no need to confirm the LambdaFunction URL. by @mashiike in https://github.com/mashiike/ls3viewer/pull/7
 
