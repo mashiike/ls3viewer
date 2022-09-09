@@ -39,12 +39,6 @@ data "aws_iam_policy_document" "ls3viewer" {
   }
   statement {
     actions = [
-      "lambda:GetFunction*",
-    ]
-    resources = ["*"]
-  }
-  statement {
-    actions = [
       "s3:GetObject",
       "s3:List*",
     ]

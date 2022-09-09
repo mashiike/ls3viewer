@@ -88,7 +88,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) buildTemplateData(r *http.Request) (map[string]interface{}, error) {
 	ctx := r.Context()
-	baseURL, err := h.opts.getBaseURL(ctx)
+	baseURL, err := h.opts.getBaseURL(r)
 	if err != nil {
 		return nil, err
 	}
