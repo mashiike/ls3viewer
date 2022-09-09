@@ -37,7 +37,6 @@ The example of lambda directory uses [lambroll](https://github.com/fujiwara/lamb
 
 For more information on the infrastructure around lambda functions, please refer to [example.tf](lambda/example.tf).
 
-
 ## LICENSE
 
 MIT License

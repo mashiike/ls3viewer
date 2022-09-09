@@ -76,6 +76,9 @@ func (opts *Options) getBaseURL(r *http.Request) (*url.URL, error) {
 	if r.URL.Scheme == "" {
 		r.URL.Scheme = "https"
 	}
+	if r.URL.Host == "" {
+		r.URL.Host = r.Host
+	}
 	u := &url.URL{
 		Scheme: r.URL.Scheme,
 		Host:   r.URL.Host,
@@ -362,7 +365,7 @@ func WithAccessLogger() func(*Options) {
 	return func(o *Options) {
 		o.Middleware = append(o.Middleware, func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				o.Logger("info", r.Method, fmt.Sprintf("%s://%s%s", r.URL.Scheme, r.Host, r.URL.Path))
+				o.Logger("info", r.Method, r.URL.Path, r.Host)
 				next.ServeHTTP(w, r)
 			})
 		})
