@@ -3,7 +3,7 @@ module github.com/mashiike/ls3viewer
 go 1.17
 
 require (
-	github.com/aws/aws-lambda-go v1.26.0
+	github.com/aws/aws-lambda-go v1.34.1
 	github.com/aws/aws-sdk-go-v2 v1.16.14
 	github.com/aws/aws-sdk-go-v2/config v1.17.5
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.31
@@ -19,7 +19,7 @@ require (
 	github.com/ken39arg/go-flagx v0.0.0-20220608183922-7cf7c6c0093c
 	github.com/mattn/go-encoding v0.0.2
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	github.com/thanhpk/randstr v1.0.4
 	golang.org/x/net v0.0.0-20220907135653-1e95f45603a7
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
