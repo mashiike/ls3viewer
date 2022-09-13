@@ -238,10 +238,11 @@ func (h *googleOIDCHandler) handleLogin(w http.ResponseWriter, r *http.Request, 
 		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
 		return
 	}
-	if referer := r.Referer(); referer != "" {
-		session.RedirectTo = referer
-	} else {
-		session.RedirectTo = baseURL.String()
+	session.RedirectTo = baseURL.String()
+	if returnPath := r.URL.Query().Get("return"); returnPath != "" {
+		redirectTo := *baseURL
+		redirectTo.Path = returnPath
+		session.RedirectTo = redirectTo.String()
 	}
 
 	state := randstr.Hex(16)
@@ -324,6 +325,11 @@ func (h *googleOIDCHandler) handleDefault(w http.ResponseWriter, r *http.Request
 	}
 	loginURL := *baseURL
 	loginURL.Path = path.Join(loginURL.Path, "/oidc/login")
+	query := &url.Values{
+		"return": []string{r.URL.Path},
+	}
+	loginURL.RawQuery = query.Encode()
+	h.opts.Logger("debug", "login url =", loginURL.String())
 	if session.IDToken == "" {
 		http.Redirect(w, r, loginURL.String(), http.StatusFound)
 		return
