@@ -77,7 +77,7 @@ func main() {
 	flag.StringVar(&basicUser, "basic-user", "", "basic auth user")
 	flag.StringVar(&basicPass, "basic-pass", "", "basic auth pass")
 	flag.StringVar(&googleClientID, "google-client-id", "", "google oidc client id")
-	flag.IntVar(&listObjectsParPage, "list-objects-par-page", 1000000, "list objects par page")
+	flag.IntVar(&listObjectsParPage, "list-objects-par-page", 10000, "list objects par page")
 	flag.StringVar(&googleClientSecret, "google-client-secret", "", "google oidc client secret")
 	flag.StringVar(&encryptKey, "session-encrypt-key", "6vHtOhaRvpCT5M8caYniHUZEKEd4aaev", "oidc session encrypt key")
 	flag.StringVar(&logLevel, "log-level", "info", "log-level")
