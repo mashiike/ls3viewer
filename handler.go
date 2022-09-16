@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 	"unicode/utf8"
@@ -67,6 +68,7 @@ func New(bucketName string, objectKeyPrefix string, optFns ...func(*Options)) (h
 	for _, middleware := range opts.Middleware {
 		h = middleware(h)
 	}
+	opts.Logger("debug", "list object par page", opts.ListObjectsParPage)
 	return h, nil
 }
 
@@ -93,11 +95,14 @@ func (h *handler) buildTemplateData(r *http.Request) (map[string]interface{}, er
 		return nil, err
 	}
 	baseURL.Path = ""
-
+	var startAfter *string
+	if s := r.URL.Query().Get("next"); s != "" {
+		startAfter = &s
+	}
 	prefix := strings.TrimPrefix(r.URL.Path, "/")
 	keyPrefix := h.objectKeyPrefix + prefix
 	h.opts.Logger("debug", "url path  => s3 key prefix: ", r.URL.Path, " => ", keyPrefix)
-	resp, err := h.listObjects(ctx, keyPrefix)
+	resp, isTrancated, err := h.listObjects(ctx, keyPrefix, startAfter)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +111,29 @@ func (h *handler) buildTemplateData(r *http.Request) (map[string]interface{}, er
 		"ObjectKeyPrefix": keyPrefix,
 		"res":             resp,
 		"BaseURL":         baseURL.String(),
+	}
+	if isTrancated {
+		nextStartAfter := ""
+		if len(resp.Contents) > 0 {
+			nextStartAfter = *resp.Contents[len(resp.Contents)-1].Key
+		}
+		if len(resp.CommonPrefixes) > 0 {
+			lastPrefix := *resp.CommonPrefixes[len(resp.CommonPrefixes)-1].Prefix
+			if nextStartAfter == "" {
+				nextStartAfter = lastPrefix
+			} else if nextStartAfter < lastPrefix {
+				nextStartAfter = lastPrefix
+			}
+		}
+
+		u := *baseURL
+		u.Path = path.Join(prefix)
+		query := &url.Values{
+			"next": []string{nextStartAfter},
+		}
+		u.RawQuery = query.Encode()
+		data["IsTrancated"] = isTrancated
+		data["NextPage"] = u.String()
 	}
 
 	if content, ok := h.matchSingleObject(resp.Contents, keyPrefix); ok {
@@ -125,28 +153,40 @@ func (h *handler) buildTemplateData(r *http.Request) (map[string]interface{}, er
 	return data, nil
 }
 
-func (h *handler) listObjects(ctx context.Context, keyPrefix string) (*s3.ListObjectsV2Output, error) {
+func (h *handler) listObjects(ctx context.Context, keyPrefix string, startAfter *string) (*s3.ListObjectsV2Output, bool, error) {
+	maxKeys := int32(1000)
+	if maxKeys > h.opts.ListObjectsParPage {
+		maxKeys = h.opts.ListObjectsParPage
+	}
+	h.opts.Logger("debug", "max keys", maxKeys)
 	params := &s3.ListObjectsV2Input{
-		Bucket:    aws.String(h.bucketName),
-		Delimiter: aws.String("/"),
-		Prefix:    aws.String(keyPrefix),
-		MaxKeys:   1000,
+		Bucket:     aws.String(h.bucketName),
+		Delimiter:  aws.String("/"),
+		Prefix:     aws.String(keyPrefix),
+		MaxKeys:    maxKeys,
+		StartAfter: startAfter,
 	}
 	p := s3.NewListObjectsV2Paginator(h.opts.S3Client, params)
 	var resp *s3.ListObjectsV2Output
 	for p.HasMorePages() {
 		output, err := p.NextPage(ctx)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
+		h.opts.Logger("debug", "now key count", output.KeyCount, "", len(output.Contents), "contents")
 		if resp == nil {
 			resp = output
 		} else {
 			resp.KeyCount += output.KeyCount
 			resp.Contents = append(resp.Contents, output.Contents...)
+			resp.CommonPrefixes = append(resp.CommonPrefixes, output.CommonPrefixes...)
+		}
+		h.opts.Logger("debug", "total key count", resp.KeyCount, "", len(resp.Contents), "contents")
+		if resp.KeyCount >= h.opts.ListObjectsParPage {
+			return resp, p.HasMorePages(), nil
 		}
 	}
-	return resp, nil
+	return resp, false, nil
 }
 
 func (h *handler) matchSingleObject(contents []types.Object, keyPrefix string) (*types.Object, bool) {

@@ -39,11 +39,12 @@ type S3Client interface {
 type LoggerFunc func(level string, v ...interface{})
 
 type Options struct {
-	HTMLTemplate string
-	S3Client     S3Client
-	Logger       LoggerFunc
-	BaseURL      string
-	Middleware   []func(http.Handler) http.Handler
+	ListObjectsParPage int32
+	HTMLTemplate       string
+	S3Client           S3Client
+	Logger             LoggerFunc
+	BaseURL            string
+	Middleware         []func(http.Handler) http.Handler
 }
 
 func newOptions() *Options {
@@ -53,6 +54,7 @@ func newOptions() *Options {
 			vals := append([]interface{}{"[" + level + "]"}, v...)
 			log.Println(vals...)
 		},
+		ListObjectsParPage: 10000,
 	}
 }
 
@@ -78,7 +80,8 @@ func (opts *Options) getBaseURL(r *http.Request) (*url.URL, error) {
 		r.URL.Host = r.Host
 	}
 	if r.URL.Scheme == "" {
-		if r.URL.Host == "localhost" || r.URL.Host == "127.0.0.1" {
+		opts.Logger("debug", r.URL.Host)
+		if r.URL.Hostname() == "localhost" || r.URL.Hostname() == "127.0.0.1" {
 			r.URL.Scheme = "http"
 		} else {
 			r.URL.Scheme = "https"
@@ -471,6 +474,14 @@ func WithLogger(l LoggerFunc) func(*Options) {
 	return func(o *Options) {
 		if l != nil {
 			o.Logger = l
+		}
+	}
+}
+
+func WithListObjectsParPage(l int32) func(*Options) {
+	return func(o *Options) {
+		if l > 0 {
+			o.ListObjectsParPage = l
 		}
 	}
 }
