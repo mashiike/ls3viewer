@@ -260,7 +260,7 @@ func (h *googleOIDCHandler) handleLogin(w http.ResponseWriter, r *http.Request, 
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	authURL := cfg.AuthCodeURL(state)
+	authURL := cfg.AuthCodeURL(state, oidc.Nonce(randstr.Hex(16)))
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
