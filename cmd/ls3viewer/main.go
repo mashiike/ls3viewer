@@ -66,6 +66,8 @@ func main() {
 		googleClientID     string
 		googleClientSecret string
 		encryptKey         string
+		googleOIDCAllowed  string
+		googleOIDCDenied   string
 	)
 	flag.StringVar(&bucketName, "bucket-name", "", "s3 bucket name")
 	flag.StringVar(&objectKeyPrefix, "key-prefix", "", "object-key-prefix")
@@ -77,6 +79,8 @@ func main() {
 	flag.StringVar(&googleClientSecret, "google-client-secret", "", "google oidc client secret")
 	flag.StringVar(&encryptKey, "session-encrypt-key", "6vHtOhaRvpCT5M8caYniHUZEKEd4aaev", "oidc session encrypt key")
 	flag.StringVar(&logLevel, "log-level", "info", "log-level")
+	flag.StringVar(&googleOIDCAllowed, "google-oidc-allowed", "", "google oidc comma separated allowed email pattern")
+	flag.StringVar(&googleOIDCDenied, "google-oidc-denied", "", "google oidc comma separated denieded email pattern")
 	flag.VisitAll(flagx.EnvToFlag)
 	flag.VisitAll(flagx.EnvToFlagWithPrefix("LS3VIEWER_"))
 	flag.Parse()
@@ -97,7 +101,14 @@ func main() {
 		if keyLen != 16 && keyLen != 24 && keyLen != 32 {
 			log.Fatalln("session encrypt key length must 16, 24 or 32 byte")
 		}
-		optFns = append(optFns, ls3viewer.WithGoogleOIDC(googleClientID, googleClientSecret, key))
+		var allowed, denieded []string
+		if googleOIDCAllowed != "" {
+			allowed = strings.Split(googleOIDCAllowed, ",")
+		}
+		if googleOIDCDenied != "" {
+			denieded = strings.Split(googleOIDCDenied, ",")
+		}
+		optFns = append(optFns, ls3viewer.WithGoogleOIDC(googleClientID, googleClientSecret, key, allowed, denieded))
 	}
 	optFns = append(optFns, ls3viewer.WithAccessLogger())
 	optFns = append(optFns, ls3viewer.WithRecover())

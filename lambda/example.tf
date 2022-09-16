@@ -120,6 +120,27 @@ resource "aws_ssm_parameter" "GOOGLE_CLIENT_ID" {
   value       = local.google_client_id
 }
 
+resource "aws_ssm_parameter" "SESSION_ENCRYPT_KEY" {
+  name        = "/ls3viewer/SESSION_ENCRYPT_KEY"
+  description = "SESSION_ENCRYPT_KEY for ls3viewer"
+  type        = "SecureString"
+  value       = local.session_encrypt_key
+}
+
+resource "aws_ssm_parameter" "GOOGLE_OIDC_ALLOWED" {
+  name        = "/ls3viewer/GOOGLE_OIDC_ALLOWED"
+  description = "GOOGLE_OIDC_ALLOWED for ls3viewer"
+  type        = "SecureString"
+  value       = local.google_oidc_allowed
+}
+
+resource "aws_ssm_parameter" "GOOGLE_OIDC_DENIED" {
+  name        = "/ls3viewer/GOOGLE_OIDC_DENIED"
+  description = "GOOGLE_OIDC_DENIED for ls3viewer"
+  type        = "SecureString"
+  value       = local.google_oidc_denied
+}
+
 output "lambda_function_url" {
   description = "Generated function URL"
   value       = aws_lambda_function_url.ls3viewer.function_url

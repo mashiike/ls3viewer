@@ -16,6 +16,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -108,7 +109,7 @@ func WithBasicAuth(user, pass string) func(*Options) {
 	}
 }
 
-func WithGoogleOIDC(clientID string, clientSecret string, sessionEncryptKey []byte) func(*Options) {
+func WithGoogleOIDC(clientID string, clientSecret string, sessionEncryptKey []byte, allowed []string, denieded []string) func(*Options) {
 	return func(o *Options) {
 		o.Middleware = append(o.Middleware, func(next http.Handler) http.Handler {
 			return &googleOIDCHandler{
@@ -117,6 +118,8 @@ func WithGoogleOIDC(clientID string, clientSecret string, sessionEncryptKey []by
 				sessionEncryptKey: sessionEncryptKey,
 				next:              next,
 				opts:              o,
+				allowed:           allowed,
+				denieded:          denieded,
 			}
 		})
 	}
@@ -188,6 +191,8 @@ type googleOIDCHandler struct {
 	sessionEncryptKey []byte
 	next              http.Handler
 	opts              *Options
+	allowed           []string
+	denieded          []string
 }
 
 func (h *googleOIDCHandler) newOIDCConfig(ctx context.Context, baseURL *url.URL) (*oidc.Provider, *oauth2.Config, error) {
@@ -203,6 +208,9 @@ func (h *googleOIDCHandler) newOIDCConfig(ctx context.Context, baseURL *url.URL)
 		Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID},
 		RedirectURL:  u.String(),
+	}
+	if len(h.allowed) != 0 || len(h.denieded) != 0 {
+		cfg.Scopes = append(cfg.Scopes, "email")
 	}
 	return provider, cfg, nil
 }
@@ -334,7 +342,7 @@ func (h *googleOIDCHandler) handleDefault(w http.ResponseWriter, r *http.Request
 		http.Redirect(w, r, loginURL.String(), http.StatusFound)
 		return
 	}
-	_, exp, err := h.checkIDToken(r.Context(), provider, session.IDToken)
+	idTokenClaims, exp, err := h.checkIDToken(r.Context(), provider, session.IDToken)
 	if err != nil {
 		http.Redirect(w, r, loginURL.String(), http.StatusFound)
 		return
@@ -343,6 +351,33 @@ func (h *googleOIDCHandler) handleDefault(w http.ResponseWriter, r *http.Request
 		h.opts.Logger("debug", "expired", exp, "until", time.Until(exp))
 		http.Redirect(w, r, loginURL.String(), http.StatusFound)
 		return
+	}
+	if len(h.allowed) != 0 || len(h.denieded) != 0 {
+		email, ok := idTokenClaims["email"].(string)
+		if !ok {
+			h.opts.Logger("debug", "expired", exp, "until", time.Until(exp))
+			http.Redirect(w, r, loginURL.String(), http.StatusFound)
+			return
+		}
+		for _, d := range h.denieded {
+			if wildcardMatch(d, email) {
+				h.opts.Logger("debug", "access denied", idTokenClaims["sub"])
+				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+				return
+			}
+		}
+		var isMatch bool
+		for _, a := range h.allowed {
+			if wildcardMatch(a, email) {
+				isMatch = true
+				break
+			}
+		}
+		if !isMatch {
+			h.opts.Logger("debug", "access denied", idTokenClaims["sub"])
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
 	}
 	h.next.ServeHTTP(w, r)
 }
@@ -365,6 +400,34 @@ func (h *googleOIDCHandler) checkIDToken(ctx context.Context, provider *oidc.Pro
 		exp = time.Unix(int64(v), 0)
 	}
 	return idTokenClaims, exp, nil
+}
+
+func wildcardMatch(pattern string, str string) bool {
+	str = strings.ToLower(str)
+	pattern = strings.ToLower(pattern)
+	if !strings.ContainsRune(pattern, '*') {
+		return strings.HasSuffix(str, pattern)
+	}
+	parts := strings.Split(pattern, "*")
+	suffix := parts[len(parts)-1]
+	if !strings.HasSuffix(str, suffix) {
+		return false
+	}
+	parts = parts[:len(parts)-1]
+	str = strings.TrimSuffix(str, suffix)
+	for len(parts) > 0 {
+		p := parts[len(parts)-1]
+		parts = parts[:len(parts)-1]
+		if p == "" {
+			continue
+		}
+		i := strings.LastIndex(str, p)
+		if i < 0 {
+			return false
+		}
+		str = str[:i]
+	}
+	return true
 }
 
 func WithAccessLogger() func(*Options) {
