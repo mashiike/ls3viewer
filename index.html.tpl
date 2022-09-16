@@ -36,7 +36,7 @@
     {{end}}
     {{if .ContentBody }}
       <div class="card mt-3">
-        <pre><code>{{ .ContentBody }}</code></pre>
+        <pre class="m-3"><code>{{ .ContentBody }}</code></pre>
       </div>
     {{end}}
     </div>
