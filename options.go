@@ -74,11 +74,15 @@ func (opts *Options) getBaseURL(r *http.Request) (*url.URL, error) {
 	if opts.BaseURL != "" {
 		return url.Parse(opts.BaseURL)
 	}
-	if r.URL.Scheme == "" {
-		r.URL.Scheme = "https"
-	}
 	if r.URL.Host == "" {
 		r.URL.Host = r.Host
+	}
+	if r.URL.Scheme == "" {
+		if r.URL.Host == "localhost" || r.URL.Host == "127.0.0.1" {
+			r.URL.Scheme = "http"
+		} else {
+			r.URL.Scheme = "https"
+		}
 	}
 	u := &url.URL{
 		Scheme: r.URL.Scheme,
