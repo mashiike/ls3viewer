@@ -72,7 +72,6 @@ func main() {
 	flag.StringVar(&bucketName, "bucket-name", "", "s3 bucket name")
 	flag.StringVar(&objectKeyPrefix, "key-prefix", "", "object-key-prefix")
 	flag.StringVar(&address, "address", ":8080", "local server address")
-	flag.StringVar(&address, "base-url", "", "viewer base url")
 	flag.StringVar(&basicUser, "basic-user", "", "basic auth user")
 	flag.StringVar(&basicPass, "basic-pass", "", "basic auth pass")
 	flag.StringVar(&googleClientID, "google-client-id", "", "google oidc client id")
