@@ -68,6 +68,8 @@ func main() {
 		encryptKey         string
 		googleOIDCAllowed  string
 		googleOIDCDenied   string
+
+		listObjectsParPage int
 	)
 	flag.StringVar(&bucketName, "bucket-name", "", "s3 bucket name")
 	flag.StringVar(&objectKeyPrefix, "key-prefix", "", "object-key-prefix")
@@ -75,6 +77,7 @@ func main() {
 	flag.StringVar(&basicUser, "basic-user", "", "basic auth user")
 	flag.StringVar(&basicPass, "basic-pass", "", "basic auth pass")
 	flag.StringVar(&googleClientID, "google-client-id", "", "google oidc client id")
+	flag.IntVar(&listObjectsParPage, "list-objects-par-page", 1000000, "list objects par page")
 	flag.StringVar(&googleClientSecret, "google-client-secret", "", "google oidc client secret")
 	flag.StringVar(&encryptKey, "session-encrypt-key", "6vHtOhaRvpCT5M8caYniHUZEKEd4aaev", "oidc session encrypt key")
 	flag.StringVar(&logLevel, "log-level", "info", "log-level")
@@ -111,6 +114,7 @@ func main() {
 	}
 	optFns = append(optFns, ls3viewer.WithAccessLogger())
 	optFns = append(optFns, ls3viewer.WithRecover())
+	optFns = append(optFns, ls3viewer.WithListObjectsParPage(int32(listObjectsParPage)))
 	h, err := ls3viewer.New(bucketName, objectKeyPrefix, optFns...)
 	if err != nil {
 		log.Fatalln(err)
