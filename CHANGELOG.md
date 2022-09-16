@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.2.0](https://github.com/mashiike/ls3viewer/compare/v0.1.4...v0.2.0) - 2022-09-16
+- nonce and access controll (email based) by @mashiike in https://github.com/mashiike/ls3viewer/pull/17
+- Add even margins around the `pre` tag by @ebi-yade in https://github.com/mashiike/ls3viewer/pull/18
+- if localhost, schema http by @mashiike in https://github.com/mashiike/ls3viewer/pull/19
+- Feature/pager by @mashiike in https://github.com/mashiike/ls3viewer/pull/20
+
 ## [v0.1.4](https://github.com/mashiike/ls3viewer/compare/v0.1.3...v0.1.4) - 2022-09-13
 - Fixed not being able to return to the original Path after login when google OIDC is set. by @mashiike in https://github.com/mashiike/ls3viewer/pull/13
 
