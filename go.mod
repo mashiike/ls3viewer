@@ -12,7 +12,7 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/fujiwara/logutils v1.1.0
 	github.com/fujiwara/ridge v0.6.1
-	github.com/handlename/ssmwrap v1.2.0
+	github.com/handlename/ssmwrap v1.2.1
 	github.com/ken39arg/go-flagx v0.0.0-20220608183922-7cf7c6c0093c
 	github.com/mattn/go-encoding v0.0.2
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/aws/aws-lambda-go v1.34.1 // indirect
-	github.com/aws/aws-sdk-go v1.38.71 // indirect
+	github.com/aws/aws-sdk-go v1.44.118 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.7 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.18 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.15 // indirect
