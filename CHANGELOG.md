@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.3.0](https://github.com/mashiike/ls3viewer/compare/v0.2.0...v0.3.0) - 2024-04-12
+- update go runtime and modules by @mashiike in https://github.com/mashiike/ls3viewer/pull/74
+- Bump actions/setup-go from 3 to 5 by @dependabot in https://github.com/mashiike/ls3viewer/pull/78
+- add CREDITS workflow by @mashiike in https://github.com/mashiike/ls3viewer/pull/79
+- Bump actions/checkout from 3 to 4 by @dependabot in https://github.com/mashiike/ls3viewer/pull/77
+
 ## [v0.2.0](https://github.com/mashiike/ls3viewer/compare/v0.1.4...v0.2.0) - 2022-09-16
 - nonce and access controll (email based) by @mashiike in https://github.com/mashiike/ls3viewer/pull/17
 - Add even margins around the `pre` tag by @ebi-yade in https://github.com/mashiike/ls3viewer/pull/18
