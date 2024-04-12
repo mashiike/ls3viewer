@@ -137,7 +137,7 @@ func (h *handler) buildTemplateData(r *http.Request) (map[string]interface{}, er
 	}
 
 	if content, ok := h.matchSingleObject(resp.Contents, keyPrefix); ok {
-		resp.KeyCount = 1
+		resp.KeyCount = aws.Int32(1)
 		resp.Contents = []types.Object{*content}
 		contentBody, viewable, err := h.getObject(ctx, *content)
 		if err != nil {
@@ -163,7 +163,7 @@ func (h *handler) listObjects(ctx context.Context, keyPrefix string, startAfter 
 		Bucket:     aws.String(h.bucketName),
 		Delimiter:  aws.String("/"),
 		Prefix:     aws.String(keyPrefix),
-		MaxKeys:    maxKeys,
+		MaxKeys:    aws.Int32(maxKeys),
 		StartAfter: startAfter,
 	}
 	p := s3.NewListObjectsV2Paginator(h.opts.S3Client, params)
@@ -177,12 +177,12 @@ func (h *handler) listObjects(ctx context.Context, keyPrefix string, startAfter 
 		if resp == nil {
 			resp = output
 		} else {
-			resp.KeyCount += output.KeyCount
+			*resp.KeyCount += *output.KeyCount
 			resp.Contents = append(resp.Contents, output.Contents...)
 			resp.CommonPrefixes = append(resp.CommonPrefixes, output.CommonPrefixes...)
 		}
 		h.opts.Logger("debug", "total key count", resp.KeyCount, "", len(resp.Contents), "contents")
-		if resp.KeyCount >= h.opts.ListObjectsParPage {
+		if *resp.KeyCount >= h.opts.ListObjectsParPage {
 			return resp, p.HasMorePages(), nil
 		}
 	}
@@ -223,7 +223,7 @@ func (h *handler) getObject(ctx context.Context, obj types.Object) (string, bool
 	if err != nil {
 		return "", false, err
 	}
-	body := writeAtBuffer.Bytes()[:output.ContentLength]
+	body := writeAtBuffer.Bytes()[:*output.ContentLength]
 
 	filename := path.Base(*obj.Key)
 	if strings.HasSuffix(filename, ".gz") {
