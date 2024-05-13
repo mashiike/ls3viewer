@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.17.0
 	github.com/fujiwara/logutils v1.1.2
 	github.com/fujiwara/ridge v0.9.0
 	github.com/handlename/ssmwrap v1.2.1
